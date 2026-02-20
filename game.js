@@ -5,7 +5,6 @@ const energyEl = document.getElementById('energy');
 const msgBox = document.getElementById('msg');
 const statusDesc = document.getElementById('statusDesc');
 
-// Nastavení velikosti plátna
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -29,10 +28,10 @@ const player = {
 };
 
 const enemy = {
-    x: -100,
-    y: -100,
+    x: -150, // Start dál od okraje
+    y: -150,
     size: 95,
-    speed: 1.8 // Základní rychlost
+    speed: 1.8
 };
 
 let lootItems = [];
@@ -49,6 +48,7 @@ function spawnLoot() {
 }
 
 function update() {
+    // BUG FIX: Pokud hra není aktivní, nepočítej vůbec nic
     if (!gameActive) return;
 
     // Pohyb hráče
@@ -74,10 +74,7 @@ function update() {
             score += 10;
             energy = Math.min(100, energy + 8);
             scoreEl.innerText = score;
-            
-            // Zvyšování obtížnosti
             enemy.speed += 0.05; 
-            
             spawnLoot();
         }
     });
@@ -117,7 +114,7 @@ function draw() {
     ctx.save();
     ctx.translate(player.x, player.y);
     ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
-    // Tykadla
+    
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -126,39 +123,43 @@ function draw() {
     ctx.stroke();
     ctx.restore();
 
-    if (gameActive) {
-        update();
-        requestAnimationFrame(draw);
-    }
+    // Loop běží dál, ale update() uvnitř se zastaví
+    update();
+    requestAnimationFrame(draw);
 }
 
 function endGame(text) {
+    if (!gameActive) return; // Zabrání opakovanému volání endGame
     gameActive = false;
     
-    // Kontrola High Score
+    // Zmrazení pohybu
+    player.targetX = player.x;
+    player.targetY = player.y;
+
     if (score > highScore) {
         highScore = score;
         localStorage.setItem('mravenecHighScore', highScore);
         text = "NOVÝ REKORD: " + score;
     }
 
-    statusDesc.innerHTML = text + "<br><br>Tvůj nejlepší výkon: " + highScore;
+    statusDesc.innerHTML = text + "<br><br>Tvůj rekord: " + highScore;
     msgBox.style.display = 'block';
 }
 
-// --- OVLÁDÁNÍ (S opravou scrollování) ---
+// OVLÁDÁNÍ
 const handleInput = (clientX, clientY) => {
+    if (!gameActive) return; // Ignoruj ovládání po smrti
     player.targetX = clientX;
     player.targetY = clientY;
 };
 
 window.addEventListener('touchstart', (e) => {
-    e.preventDefault();
+    if (gameActive) e.preventDefault();
     handleInput(e.touches[0].clientX, e.touches[0].clientY);
 }, { passive: false });
 
 window.addEventListener('touchmove', (e) => {
-    e.preventDefault();
+    if (gameActive) e.preventDefault();
     handleInput(e.touches[0].clientX, e.touches[0].clientY);
 }, { passive: false });
 
