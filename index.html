@@ -3,182 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Smallest Thief - Mobile Edition</title>
-    <style>
-        body { margin: 0; overflow: hidden; background: #1b1b1b; font-family: sans-serif; }
-        canvas { display: block; touch-action: none; }
-        #ui {
-            position: absolute; top: 10px; left: 10px;
-            color: white; pointer-events: none;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-        #msg {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: white; text-align: center; display: none;
-            background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px;
-        }
-    </style>
+    <title>The Smallest Thief</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="ui">
-        <div>Kořist: <span id="score">0</span></div>
-        <div>Energie: <span id="energy">100</span>%</div>
+        <div class="stat">Kořist: <span id="score">0</span></div>
+        <div class="stat">Energie: <span id="energy">100</span>%</div>
     </div>
 
-    <div id="msg" id="deathScreen">
+    <div id="msg">
         <h2 id="statusTitle">KONEC HRY</h2>
-        <p id="statusDesc">Zašlápl tě obr!</p>
-        <button onclick="location.reload()" style="padding: 10px 20px; cursor: pointer;">Zkusit znovu</button>
+        <p id="statusDesc">Byl jsi polapen!</p>
+        <button onclick="location.reload()">Hrát znovu</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreEl = document.getElementById('score');
-        const energyEl = document.getElementById('energy');
-        const msgBox = document.getElementById('msg');
-
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        // --- HERNÍ PROMĚNNÉ ---
-        let score = 0;
-        let energy = 100;
-        let gameActive = true;
-
-        // Hráč (Mravenec)
-        let player = {
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            targetX: canvas.width / 2,
-            targetY: canvas.height / 2,
-            size: 15,
-            speed: 0.15 // Plynulost pohybu
-        };
-
-        // Kořist (Drobky)
-        let loot = [];
-        for(let i=0; i<5; i++) spawnLoot();
-
-        // Nepřítel (Robotický vysavač / Bota)
-        let enemy = {
-            x: -100,
-            y: -100,
-            size: 80,
-            speed: 2,
-            angle: 0
-        };
-
-        // --- FUNKCE ---
-
-        function spawnLoot() {
-            loot.push({
-                x: Math.random() * (canvas.width - 40) + 20,
-                y: Math.random() * (canvas.height - 40) + 20,
-                size: 8,
-                color: '#f1c40f'
-            });
-        }
-
-        function update() {
-            if (!gameActive) return;
-
-            // Pohyb hráče k prstu/myši
-            player.x += (player.targetX - player.x) * player.speed;
-            player.y += (player.targetY - player.y) * player.speed;
-
-            // Pohyb nepřítele (pronásleduje tě pomalu)
-            let dx = player.x - enemy.x;
-            let dy = player.y - enemy.y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            enemy.x += (dx / dist) * enemy.speed;
-            enemy.y += (dy / dist) * enemy.speed;
-
-            // Kolize s kořistí
-            loot.forEach((item, index) => {
-                let ldx = player.x - item.x;
-                let ldy = player.y - item.y;
-                if (Math.sqrt(ldx*ldx + ldy*ldy) < player.size) {
-                    loot.splice(index, 1);
-                    score += 10;
-                    scoreEl.innerText = score;
-                    spawnLoot();
-                    if(energy < 100) energy += 5;
-                }
-            });
-
-            // Kolize s nepřítelem
-            if (dist < (player.size + enemy.size / 2)) {
-                gameOver("Byl jsi polapen!");
-            }
-
-            // Úbytek energie časem
-            energy -= 0.05;
-            energyEl.innerText = Math.floor(energy);
-            if (energy <= 0) gameOver("Vyčerpání!");
-        }
-
-        function draw() {
-            // Pozadí (Podlaha)
-            ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Kreslení kořisti
-            loot.forEach(item => {
-                ctx.fillStyle = item.color;
-                ctx.beginPath();
-                ctx.arc(item.x, item.y, item.size, 0, Math.PI*2);
-                ctx.fill();
-            });
-
-            // Kreslení nepřítele (Stín obří boty)
-            ctx.fillStyle = 'rgba(0,0,0,0.4)';
-            ctx.beginPath();
-            ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI*2);
-            ctx.fill();
-            ctx.strokeStyle = 'red';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // Kreslení hráče (Mravenec)
-            ctx.save();
-            ctx.translate(player.x, player.y);
-            ctx.fillStyle = '#e74c3c';
-            ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
-            // Tykadla
-            ctx.fillStyle = 'black';
-            ctx.fillRect(-player.size/2, -player.size/2 - 5, 2, 5);
-            ctx.fillRect(player.size/2 - 2, -player.size/2 - 5, 2, 5);
-            ctx.restore();
-
-            if (gameActive) {
-                update();
-                requestAnimationFrame(draw);
-            }
-        }
-
-        function gameOver(reason) {
-            gameActive = false;
-            msgBox.style.display = 'block';
-            document.getElementById('statusDesc').innerText = reason;
-        }
-
-        // --- OVLÁDÁNÍ ---
-        window.addEventListener('touchmove', (e) => {
-            player.targetX = e.touches[0].clientX;
-            player.targetY = e.touches[0].clientY;
-        }, { passive: false });
-
-        window.addEventListener('mousemove', (e) => {
-            player.targetX = e.clientX;
-            player.targetY = e.clientY;
-        });
-
-        draw();
-    </script>
+    <script src="game.js"></script>
 </body>
 </html>
