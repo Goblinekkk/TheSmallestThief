@@ -1,0 +1,63 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #1a1a1a;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
+}
+
+canvas {
+    display: block;
+    touch-action: none; /* Důležité pro mobilní ovládání */
+}
+
+#ui {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    color: white;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.stat {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 12px;
+    border-radius: 20px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#msg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(20, 20, 20, 0.95);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    display: none;
+    z-index: 100;
+    border: 2px solid #e74c3c;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+button {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:active {
+    background: #c0392b;
+}
